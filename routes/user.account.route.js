@@ -52,11 +52,18 @@ router.patch('/depositMoney', async (req, res) => {
     try {
         const userAlready = await userModel.findOne({ email, panNo });
         let {initialBalance} = userAlready;
+        let arr=[];
+        let obj={
+            user:userAlready,
+            amount:amount
+        }
+
+        arr.push(obj);
 
         initialBalance=initialBalance+amount;
         await userModel.findByIdAndUpdate({_id:userAlready._id}, {initialBalance});
 
-        res.status(200).send({ message: 'Amount is deposited in account', "user": userAlready });
+        res.status(200).send({ message: 'Amount is deposited in account', "user": userAlready, "detail":arr });
     } catch (err) {
         res.status(400).send({ message: err.message });
     }
@@ -70,10 +77,18 @@ router.patch('/withdrawMoney', async (req, res) => {
         const userAlready = await userModel.findOne({ email, panNo });
         let {initialBalance} = userAlready;
 
+        let arr=[];
+        let obj={
+            user:userAlready,
+            amount:amount
+        }
+
+        arr.push(obj);
+
         initialBalance=initialBalance-amount;
         await userModel.findByIdAndUpdate({_id:userAlready._id}, {initialBalance});
 
-        res.status(200).send({ message: 'Amount is Withdraw in account', "user": userAlready });
+        res.status(200).send({ message: 'Amount is Withdraw in account', "user": userAlready, "detail":arr });
     } catch (err) {
         res.status(400).send({ message: err.message });
     }
@@ -86,7 +101,36 @@ router.delete('/closeAccount', async (req, res) => {
     try {
         const user=await userModel.findByIdAndDelete({_id:id});
 
-        res.status(200).send({ message: 'User has been deleted', "user": user });
+        res.status(200).send({ message: 'User has been deleted', "user": user});
+    } catch (err) {
+        res.status(400).send({ message: err.message });
+    }
+});
+
+router.patch('/transferMoney', async (req, res) => {
+    const { amount } = req.body;
+    const {sender} = req.body;
+    const {name, email, panNo}=req.body;
+
+    try {
+        const sendUser=await userModel.findOne({name:sender })
+        const userAlready = await userModel.findOne({name, email, panNo });
+
+        let arr=[];
+        let obj={
+            user:userAlready,
+            amount:amount,
+            sendUser:sendUser
+        }
+
+        arr.push(obj);
+
+        let {initialBalance} = userAlready;
+
+        initialBalance=initialBalance+amount;
+        await userModel.findByIdAndUpdate({_id:userAlready._id}, {initialBalance});
+
+        res.status(200).send({ message: 'Amount is Withdraw in account', "user": userAlready, "detail":arr });
     } catch (err) {
         res.status(400).send({ message: err.message });
     }
